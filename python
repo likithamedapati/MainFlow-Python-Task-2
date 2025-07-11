@@ -1,0 +1,86 @@
+import random
+
+# Maze generation constants
+WALL = 1
+PATH = 0
+
+def generate_maze(width, height):
+    # Ensure dimensions are odd
+    width = width if width % 2 == 1 else width + 1
+    height = height if height % 2 == 1 else height + 1
+
+    # Initialize maze full of walls
+    maze = [[WALL for _ in range(width)] for _ in range(height)]
+
+    def dfs(x, y):
+        directions = [(0, 2), (0, -2), (2, 0), (-2, 0)]
+        random.shuffle(directions)
+        for dx, dy in directions:
+            nx, ny = x + dx, y + dy
+            if 1 <= nx < height - 1 and 1 <= ny < width - 1 and maze[nx][ny] == WALL:
+                maze[nx][ny] = PATH
+                maze[x + dx // 2][y + dy // 2] = PATH
+                dfs(nx, ny)
+
+    # Start from (1,1)
+    maze[1][1] = PATH
+    dfs(1, 1)
+    return maze
+
+def print_maze(maze):
+    for row in maze:
+        print(''.join(['█' if cell == WALL else ' ' for cell in row]))
+
+def solve_maze(maze, start, end):
+    h, w = len(maze), len(maze[0])
+    visited = [[False] * w for _ in range(h)]
+    path = []
+
+    def dfs(x, y):
+        if not (0 <= x < h and 0 <= y < w):
+            return False
+        if (x, y) == end:
+            path.append((x, y))
+            return True
+        if maze[x][y] == WALL or visited[x][y]:
+            return False
+        visited[x][y] = True
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            if dfs(x + dx, y + dy):
+                path.append((x, y))
+                return True
+        return False
+
+    if dfs(start[0], start[1]):
+        path.reverse()
+        return path
+    else:
+        return None
+
+def mark_path(maze, path):
+    for x, y in path:
+        if maze[x][y] == PATH:
+            maze[x][y] = 2  # Mark path
+
+def print_maze_with_path(maze):
+    for row in maze:
+        print(''.join(['█' if cell == 1 else '·' if cell == 2 else ' ' for cell in row]))
+
+# Example Usage
+width, height = 21, 21
+maze = generate_maze(width, height)
+
+print("Generated Maze:")
+print_maze(maze)
+
+start = (1, 1)
+end = (height - 2, width - 2)
+
+path = solve_maze(maze, start, end)
+
+if path:
+    mark_path(maze, path)
+    print("\nSolved Maze Path:")
+    print_maze_with_path(maze)
+else:
+    print("No path found.")
